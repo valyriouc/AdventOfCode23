@@ -36,3 +36,6 @@
 
 # Build output 
 **/Build
+
+**/obj
+**/bin
