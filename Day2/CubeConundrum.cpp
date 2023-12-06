@@ -7,7 +7,7 @@
 #include<cmath>
 
 struct Set {
-private:
+public:
     unsigned int m_red = { 0 };
     unsigned int m_green = { 0 };
     unsigned int m_blue = { 0 };
@@ -52,6 +52,23 @@ public:
         }
 
         return true;
+    }
+
+    auto leastPower() -> unsigned int {
+        int r = 0, g = 0, b = 0;
+        for (Set& s : m_sets) {
+            if (s.m_red > r) {
+                r = s.m_red;
+            }
+            if (s.m_green > g) {
+                g = s.m_green;
+            }
+            if (s.m_blue > b) {
+                b = s.m_blue;
+            }
+        }
+
+        return r * g * b;
     }
 };
 
@@ -198,6 +215,20 @@ public:
             outputStream << result;
         }
     }
+
+    auto calculateResult2(std::string outputPath) -> void {
+        int result = 0;
+        for (Game* game : m_games) {
+            unsigned int test = game->leastPower();
+            std::cout << test << std::endl;
+            result += test;
+        }
+
+        std::ofstream outputStream(outputPath);
+        if (outputStream.is_open()) {
+            outputStream << result;
+        }
+    }
 };
 
 // TODO: Skip empty line
@@ -206,7 +237,7 @@ int main() {
 
     manager.loadGamesFrom("./inputs/input.txt");
 
-    manager.calculateResult("./inputs/result.txt");
+    manager.calculateResult2("./inputs/result2.txt");
 
     return 0;
 }
