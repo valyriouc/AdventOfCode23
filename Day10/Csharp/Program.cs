@@ -15,11 +15,18 @@ public enum PipeType
 
 public class Program
 {
+    public static int Rows { get; set; }
+
+    public static int Columns { get; set; }
+
     static void Main(string[] args)
     {
         Span<string> input = File.ReadAllLines("../../../../input");
 
         (int rows, int columns) = GetFieldSize(input);
+
+        Rows = rows;
+        Columns = columns;
 
         PipeType[,] field = ParseInput(input, rows, columns);
 
@@ -92,7 +99,7 @@ public class Program
         return output;
     }
 
-    public static (bool, PipeType) BuildLoopInternal(
+    private static (bool, PipeType) BuildLoopInternal(
         PipeType[,] input,
         List<PipeType> output,
         int yStart, 
@@ -103,7 +110,9 @@ public class Program
         bool saveState = false;
         PipeType saveSign = PipeType.Empty;
 
-        foreach ((int y, int x) in GetNextCoordinates(input[yStart, xStart], yStart, xStart))
+        PipeType current = input[yStart, xStart];
+        Console.WriteLine(current);
+        foreach ((int y, int x) in GetNextCoordinates(current, yStart, xStart))
         {
             if (input[y, x] == PipeType.Empty || 
                 (y == yOld && x == xOld))
@@ -116,14 +125,17 @@ public class Program
                 return (true, PipeType.End);
             }
 
-            (bool state, PipeType sign) = BuildLoopInternal(input, output, y, x, yStart, xStart);
-             
-            if (state)
+            if (IsValidFollower(current, input[y,x], y > yStart, x > xStart))
             {
-                output.Add(sign);
-                saveState = true;
-                saveSign = input[y, x];
-                break;
+                (bool state, PipeType sign) = BuildLoopInternal(input, output, y, x, yStart, xStart);
+
+                if (state)
+                {
+                    output.Add(sign);
+                    saveState = true;
+                    saveSign = input[y, x];
+                    break;
+                }
             }
         }
 
@@ -141,7 +153,7 @@ public class Program
             yield return (yStart - 1, xStart);
         }
 
-        if (yStart < 4 &&
+        if (yStart < Rows - 1 &&
             (current == PipeType.NorthSourth ||
             current == PipeType.WestSourth ||
             current == PipeType.EastSourth ||
@@ -159,7 +171,7 @@ public class Program
             yield return (yStart, xStart - 1);
         }
 
-        if (xStart < 4 && 
+        if (xStart < Columns - 1 && 
             (current == PipeType.EastWest || 
             current == PipeType.NorthEast ||
             current == PipeType.EastSourth ||
@@ -167,5 +179,64 @@ public class Program
         {
             yield return (yStart, xStart + 1);
         }
+    }
+
+    private static bool IsValidFollower(PipeType current, PipeType next, bool isHigherY, bool isHigherX)
+    {
+        if (current == PipeType.Start)
+        {
+            return true;
+        }
+
+        if (current == PipeType.NorthSourth && isHigherY)
+        {
+            return next == PipeType.NorthSourth || next == PipeType.NorthEast || next == PipeType.NorthWest;
+        }
+        else if (current == PipeType.NorthSourth && !isHigherY)
+        {
+            return next == PipeType.NorthSourth || next == PipeType.EastSourth || next == PipeType.WestSourth;
+        }
+        else if (current == PipeType.WestSourth && isHigherX)
+        {
+            return next == PipeType.WestSourth || next == PipeType.NorthWest || next == PipeType.WestSourth;
+        }
+        else if (current == PipeType.WestSourth && !isHigherX)
+        {
+            return next == PipeType.WestSourth || next == PipeType.NorthEast || next == PipeType.NorthEast;
+        }
+        else if (current == PipeType.NorthEast && isHigherX)
+        {
+            return next == PipeType.EastWest || next == PipeType.NorthWest || next == PipeType.WestSourth;
+        }
+        else if (current == PipeType.NorthEast && !isHigherY)
+        {
+            return next == PipeType.NorthSourth || next == PipeType.WestSourth || next == PipeType.EastSourth;
+        }
+        else if (current == PipeType.NorthWest && !isHigherX)
+        {
+            return next == PipeType.EastWest || next == PipeType.NorthEast || next == PipeType.EastSourth;
+        }
+        else if (current == PipeType.NorthWest && !isHigherY)
+        {
+            return next == PipeType.NorthSourth || next == PipeType.WestSourth || next == PipeType.EastSourth;
+        }
+        else if (current == PipeType.WestSourth && !isHigherX)
+        {
+            return next == PipeType.EastWest || next == PipeType.NorthEast || next == PipeType.EastSourth;
+        }
+        else if (current == PipeType.WestSourth && isHigherY)
+        {
+            return next == PipeType.NorthSourth || next == PipeType.NorthEast || next == PipeType.NorthWest;
+        }
+        else if (current == PipeType.EastSourth && isHigherY)
+        {
+            return next == PipeType.NorthSourth || next == PipeType.NorthEast || next == PipeType.NorthWest;
+        }
+        else if (current == PipeType.EastSourth && isHigherX)
+        {
+            return next == PipeType.EastWest || next == PipeType.NorthWest || next == PipeType.WestSourth;
+        }
+
+        return false;
     }
 }
