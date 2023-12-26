@@ -13,6 +13,13 @@ public enum PipeType
     End = 8
 }
 
+public enum Difference
+{
+    Smaller = 0,
+    Equal = 1,
+    Higher = 2
+}
+
 public class Program
 {
     public static int Rows { get; set; }
@@ -34,8 +41,6 @@ public class Program
         (int y, int x) = GetStartIndex(field, columns);
 
         IEnumerable<PipeType> loop = BuildLoop(field, y, x);
-
-        //Console.WriteLine(loop.Count() / 2); // Here comes the result
 
         foreach (PipeType t in loop)
         {
@@ -111,7 +116,6 @@ public class Program
         PipeType saveSign = PipeType.Empty;
 
         PipeType current = input[yStart, xStart];
-        Console.WriteLine(current);
         foreach ((int y, int x) in GetNextCoordinates(current, yStart, xStart))
         {
             if (input[y, x] == PipeType.Empty || 
@@ -125,7 +129,12 @@ public class Program
                 return (true, PipeType.End);
             }
 
-            if (IsValidFollower(current, input[y,x], y > yStart, x > xStart))
+            PipeType next = input[y, x];
+
+            Difference yDiff = GetDifference(yStart, y);
+            Difference xDiff = GetDifference(xStart, x);
+
+            if (IsValidFollower(current, next, yDiff, xDiff))
             {
                 (bool state, PipeType sign) = BuildLoopInternal(input, output, y, x, yStart, xStart);
 
@@ -137,9 +146,23 @@ public class Program
                     break;
                 }
             }
+            else
+            {
+                continue;
+            }
         }
 
         return (saveState, saveSign);
+    }
+
+    public static Difference GetDifference(int current, int next)
+    {
+        if (current == next)
+        {
+            return Difference.Equal;
+        }
+
+        return current > next ? Difference.Higher : Difference.Smaller;
     }
 
     public static IEnumerable<(int, int)> GetNextCoordinates(PipeType current, int yStart, int xStart)
@@ -181,58 +204,58 @@ public class Program
         }
     }
 
-    private static bool IsValidFollower(PipeType current, PipeType next, bool isHigherY, bool isHigherX)
+    private static bool IsValidFollower(PipeType current, PipeType next, Difference yDiff, Difference xDiff)
     {
         if (current == PipeType.Start)
         {
             return true;
         }
 
-        if (current == PipeType.NorthSourth && isHigherY)
+        if (current == PipeType.NorthSourth && yDiff == Difference.Smaller && xDiff == Difference.Equal)
         {
             return next == PipeType.NorthSourth || next == PipeType.NorthEast || next == PipeType.NorthWest;
         }
-        else if (current == PipeType.NorthSourth && !isHigherY)
-        {
+        else if (current == PipeType.NorthSourth && yDiff == Difference.Higher && xDiff == Difference.Equal)
+         {
             return next == PipeType.NorthSourth || next == PipeType.EastSourth || next == PipeType.WestSourth;
         }
-        else if (current == PipeType.WestSourth && isHigherX)
+        else if (current == PipeType.EastWest && xDiff == Difference.Higher && yDiff == Difference.Equal)
         {
-            return next == PipeType.WestSourth || next == PipeType.NorthWest || next == PipeType.WestSourth;
+            return next == PipeType.EastWest || next == PipeType.NorthEast || next == PipeType.EastSourth;
         }
-        else if (current == PipeType.WestSourth && !isHigherX)
-        {
-            return next == PipeType.WestSourth || next == PipeType.NorthEast || next == PipeType.NorthEast;
-        }
-        else if (current == PipeType.NorthEast && isHigherX)
+        else if (current == PipeType.EastWest && xDiff == Difference.Smaller && yDiff == Difference.Equal)
         {
             return next == PipeType.EastWest || next == PipeType.NorthWest || next == PipeType.WestSourth;
         }
-        else if (current == PipeType.NorthEast && !isHigherY)
+        else if (current == PipeType.NorthEast && xDiff == Difference.Smaller && yDiff == Difference.Equal)
+        {
+            return next == PipeType.EastWest || next == PipeType.NorthWest || next == PipeType.WestSourth;
+        }
+        else if (current == PipeType.NorthEast && yDiff == Difference.Higher && xDiff == Difference.Equal)
         {
             return next == PipeType.NorthSourth || next == PipeType.WestSourth || next == PipeType.EastSourth;
         }
-        else if (current == PipeType.NorthWest && !isHigherX)
+        else if (current == PipeType.NorthWest && xDiff == Difference.Higher && yDiff == Difference.Equal )
         {
             return next == PipeType.EastWest || next == PipeType.NorthEast || next == PipeType.EastSourth;
         }
-        else if (current == PipeType.NorthWest && !isHigherY)
+        else if (current == PipeType.NorthWest && yDiff == Difference.Higher && xDiff == Difference.Equal)
         {
             return next == PipeType.NorthSourth || next == PipeType.WestSourth || next == PipeType.EastSourth;
         }
-        else if (current == PipeType.WestSourth && !isHigherX)
+        else if (current == PipeType.WestSourth && xDiff == Difference.Higher && yDiff == Difference.Equal)
         {
             return next == PipeType.EastWest || next == PipeType.NorthEast || next == PipeType.EastSourth;
         }
-        else if (current == PipeType.WestSourth && isHigherY)
+        else if (current == PipeType.WestSourth && yDiff == Difference.Smaller && xDiff == Difference.Equal)
         {
             return next == PipeType.NorthSourth || next == PipeType.NorthEast || next == PipeType.NorthWest;
         }
-        else if (current == PipeType.EastSourth && isHigherY)
+        else if (current == PipeType.EastSourth && yDiff == Difference.Smaller && xDiff == Difference.Equal)
         {
             return next == PipeType.NorthSourth || next == PipeType.NorthEast || next == PipeType.NorthWest;
         }
-        else if (current == PipeType.EastSourth && isHigherX)
+        else if (current == PipeType.EastSourth && xDiff == Difference.Smaller && yDiff == Difference.Equal)
         {
             return next == PipeType.EastWest || next == PipeType.NorthWest || next == PipeType.WestSourth;
         }
