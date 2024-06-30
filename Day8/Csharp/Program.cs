@@ -7,7 +7,7 @@ class Program
 {
     static void Main(string[] args)
     {
-        SolverBase solver = args[0] == "1" ? 
+        SolverBase solver = "2" == "1" ? 
             new Solver1() : 
             new Solver2();
 

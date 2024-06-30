@@ -8,9 +8,17 @@ public enum PipeType
     NorthWest = 3,
     WestSourth = 4,
     EastSourth = 5,
-    Empty = 6,
+    Ground = 6,
     Start = 7,
     End = 8
+}
+
+class Pipe
+{
+    public PipeType Type { get; init; }
+
+    // North East Sourth West
+
 }
 
 public enum Difference
@@ -98,7 +106,7 @@ public class Program
 
     public static IEnumerable<PipeType> BuildLoop(PipeType[,] array, int yStart, int xStart)
     {
-        List<PipeType> output = new List<PipeType>();   
+        List<PipeType> output = new List<PipeType>();
         (bool state, PipeType first) = BuildLoopInternal(array, output, yStart, xStart, yStart, xStart);
         output.Add(first);
         return output;
@@ -112,11 +120,7 @@ public class Program
         int yOld, 
         int xOld)
     {
-        bool saveState = false;
-        PipeType saveSign = PipeType.Empty;
-
-        PipeType current = input[yStart, xStart];
-        foreach ((int y, int x) in GetNextCoordinates(current, yStart, xStart))
+        foreach ((int y, int x) in GetNextCoordinates(input[yStart, xStart], yStart, xStart))
         {
             if (input[y, x] == PipeType.Empty || 
                 (y == yOld && x == xOld))
@@ -129,21 +133,18 @@ public class Program
                 return (true, PipeType.End);
             }
 
-            PipeType next = input[y, x];
-
-            Difference yDiff = GetDifference(yStart, y);
-            Difference xDiff = GetDifference(xStart, x);
-
-            if (IsValidFollower(current, next, yDiff, xDiff))
+            if (IsValidFollower(input[yStart, xStart], input[y, x], GetDifference(yStart, y), GetDifference(xStart, x)))
             {
                 (bool state, PipeType sign) = BuildLoopInternal(input, output, y, x, yStart, xStart);
 
                 if (state)
                 {
                     output.Add(sign);
-                    saveState = true;
-                    saveSign = input[y, x];
-                    break;
+                    return (true, input[y, x]);
+                }
+                else
+                {
+                    return (false, input[y, x]);
                 }
             }
             else
@@ -152,7 +153,7 @@ public class Program
             }
         }
 
-        return (saveState, saveSign);
+        return (false, PipeType.Empty);
     }
 
     public static Difference GetDifference(int current, int next)
